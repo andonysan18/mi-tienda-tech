@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useCartStore } from "@/store/cart.store"; // <--- IMPORTAR
 
 export default function Navbar() {
   const router = useRouter();
@@ -9,6 +10,8 @@ export default function Navbar() {
   
   // Estado para controlar si el menú móvil está abierto (opcional, por si lo agregamos luego)
   const [isMounted, setIsMounted] = useState(false);
+
+  const totalItems = useCartStore((state) => state.getTotal());
 
   useEffect(() => {
     setIsMounted(true);
@@ -43,6 +46,14 @@ export default function Navbar() {
         <div className="flex items-center gap-6">
           <Link href="/" className="hover:text-blue-400 transition">Inicio</Link>
           <Link href="/store" className="hover:text-blue-400 transition">Tienda</Link>
+          <Link href="/cart" className="relative hover:text-blue-400 transition mr-4">
+              <span className="text-2xl">🛒</span>
+              {isMounted && totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-slate-900">
+                  {totalItems}
+                </span>
+              )}
+          </Link>
           {/* Lógica: ¿Está logueado? */}
           {user ? (
             // SI ESTÁ LOGUEADO

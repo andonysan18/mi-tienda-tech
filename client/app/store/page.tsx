@@ -1,10 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Product } from "@/types/product.types"; // Reutilizamos el tipo que creaste
+import { useCartStore } from "@/store/cart.store";
 
 export default function StorePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 2. OBTENER LA FUNCIÓN
+  const addToCart = useCartStore((state) => state.addToCart);
 
   useEffect(() => {
     fetchProducts();
@@ -76,9 +80,13 @@ export default function StorePage() {
                       className="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={product.stock === 0}
                       title="Agregar al Carrito"
-                      onClick={() => alert(`Agregaste ${product.name} al carrito (Próximamente)`)}
+                      onClick={() => {
+                        addToCart(product);
+                        alert("Producto agregado al carrito ✅");
+                        
+                      }}
                     >
-                      🛒
+                      🛒 +
                     </button>
                   </div>
                 </div>
