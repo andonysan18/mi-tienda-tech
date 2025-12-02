@@ -60,3 +60,36 @@ export const getRepairStatus = async (req: Request, res: Response): Promise<any>
     res.status(500).json({ error: 'Error al buscar el ticket' });
   }
 };
+
+// 3. OBTENER TODOS LOS TICKETS (Para el Admin)
+export const getAllTickets = async (req: Request, res: Response) => {
+  try {
+    const tickets = await prisma.repairTicket.findMany({
+      orderBy: { createdAt: 'desc' }, // Los más nuevos primero
+      include: { user: { select: { name: true, email: true } } } // Traer nombre del dueño si existe
+    });
+    res.json(tickets);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener tickets' });
+  }
+};
+
+// 4. ACTUALIZAR ESTADO
+export const updateTicketStatus = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { status, estimatedCost } = req.body; // Recibimos nuevo estado y costo
+
+    const updatedTicket = await prisma.repairTicket.update({
+      where: { id },
+      data: { 
+        status,
+        estimatedCost: estimatedCost ? parseFloat(estimatedCost) : undefined
+      }
+    });
+
+    res.json({ message: 'Ticket actualizado', ticket: updatedTicket });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar el ticket' });
+  }
+};
