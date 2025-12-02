@@ -42,7 +42,7 @@ export default function Navbar() {
         {/* MENÚ DERECHA */}
         <div className="flex items-center gap-6">
           <Link href="/" className="hover:text-blue-400 transition">Inicio</Link>
-          
+          <Link href="/store" className="hover:text-blue-400 transition">Tienda</Link>
           {/* Lógica: ¿Está logueado? */}
           {user ? (
             // SI ESTÁ LOGUEADO
