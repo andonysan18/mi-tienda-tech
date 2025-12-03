@@ -7,11 +7,12 @@ import { useCartStore } from "@/store/cart.store"; // <--- IMPORTAR
 export default function Navbar() {
   const router = useRouter();
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
-  
   // Estado para controlar si el menú móvil está abierto (opcional, por si lo agregamos luego)
   const [isMounted, setIsMounted] = useState(false);
 
-  const totalItems = useCartStore((state) => state.getTotal());
+  const totalItems = useCartStore((state) => state.getTotalPrice());
+  const clearCart = useCartStore((state) => state.clearCart);
+
 
   useEffect(() => {
     setIsMounted(true);
@@ -26,6 +27,7 @@ export default function Navbar() {
     // 2. BORRAR EL TOKEN (La "Pulsera VIP")
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    clearCart();
     setUser(null);
     router.push("/auth/login"); // Mandar al login
   };
