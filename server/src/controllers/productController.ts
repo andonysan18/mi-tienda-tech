@@ -35,3 +35,39 @@ export const createProduct = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al crear producto' });
   }
 };
+
+// 3. ACTUALIZAR PRODUCTO
+export const updateProduct = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { name, price, category, stock, imageUrl } = req.body;
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: parseInt(id) },
+      data: {
+        name,
+        price: parseFloat(price),
+        category,
+        stock: parseInt(stock),
+        imageUrl
+      }
+    });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar producto' });
+  }
+};
+
+// 4. ELIMINAR PRODUCTO
+export const deleteProduct = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.product.delete({
+      where: { id: parseInt(id) }
+    });
+    res.json({ message: 'Producto eliminado' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar producto' });
+  }
+};
