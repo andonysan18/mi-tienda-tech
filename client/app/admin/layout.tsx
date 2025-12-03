@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuthStore } from "@/store/auth.store";
 
 export default function AdminLayout({
   children,
@@ -11,17 +12,18 @@ export default function AdminLayout({
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
 
+  const user = useAuthStore((state) => state.user);
+
+
   useEffect(() => {
     // 1. Leemos el usuario
-    const userStr = localStorage.getItem("user");
+    // const userStr = localStorage.getItem("user");
     
-    if (!userStr) {
+    if (!user) {
       // Si no hay usuario, fuera
       router.push("/auth/login");
       return;
     }
-
-    const user = JSON.parse(userStr);
 
     // 2. Verificamos ROL (Solo ADMIN o TECNICO pasan)
     if (user.role !== "ADMIN" && user.role !== "TECNICO") {

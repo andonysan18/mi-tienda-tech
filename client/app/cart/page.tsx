@@ -4,12 +4,16 @@ import { useCartStore } from "@/store/cart.store";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useAuthStore } from "@/store/auth.store";
+
 export default function CartPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   
   // TRAEMOS TODO DEL STORE
   const { cart, removeFromCart, clearCart, getTotalPrice } = useCartStore();
+  const user = useAuthStore((state) => state.user);
+
 
   useEffect(() => {
     setIsMounted(true);
@@ -17,7 +21,7 @@ export default function CartPage() {
 
   // Función simulada de pago
   const handleCheckout = () => {
-    const user = localStorage.getItem("user");
+    // const user = localStorage.getItem("user");
     
     if (!user) {
       alert("Debes iniciar sesión para comprar 🔒");

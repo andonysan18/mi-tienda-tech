@@ -3,6 +3,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { CreateTicketData } from "@/types/repair.types";
 
+import { useAuthStore } from "@/store/auth.store";
+
+
 export default function NewRepairPage() {
   const [formData, setFormData] = useState<CreateTicketData>({
     deviceModel: "",
@@ -11,16 +14,21 @@ export default function NewRepairPage() {
   const [ticketId, setTicketId] = useState<string | null>(null); // Aquí guardamos el ID si sale bien
   const [loading, setLoading] = useState(false);
 
+  const user = useAuthStore((state) => state.user);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       // Nota: Si el usuario está logueado, podríamos enviar su ID también (lo veremos luego)
+
+      const payload = { ...formData, userId: user? user.id : null};
+
       const res = await fetch("http://localhost:3001/api/repairs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       
       const data = await res.json();

@@ -6,6 +6,7 @@ import Link from "next/link";
 // Importaciones de tu arquitectura limpia
 import { validateLoginForm } from "@/utils/validations";
 import { LoginFormData, FormErrors } from "@/types/auth.types";
+import { useAuthStore } from "@/store/auth.store";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,6 +18,9 @@ export default function LoginPage() {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+
+  const login = useAuthStore((state) => state.login);
+
 
   // 2. Manejadores (Son iguales a los de Registro, ¡reutilización mental!)
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,8 +63,10 @@ export default function LoginPage() {
       if (res.ok) {
         // --- AQUÍ OCURRE LA MAGIA DEL LOGIN ---
         // Guardamos el token que nos dio el servidor en el navegador
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user)); // Guardamos nombre/rol
+        // localStorage.setItem("token", data.token);
+        // localStorage.setItem("user", JSON.stringify(data.user)); // Guardamos nombre/rol
+        console.log("Logueando usuario:", data.user); // Para depurar
+        login(data.token, data.user);
 
         alert("¡Bienvenido de nuevo! 👋");
         router.push("/"); // Redirigimos al Home (o al Dashboard después)

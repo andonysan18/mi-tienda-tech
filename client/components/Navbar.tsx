@@ -3,24 +3,28 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cart.store"; // <--- IMPORTAR
+import { useAuthStore } from "@/store/auth.store";
+import { log } from "console";
 
 export default function Navbar() {
   const router = useRouter();
-  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  // const [user, setUser] = useState<{ name: string; role: string } | null>(null);
   // Estado para controlar si el menú móvil está abierto (opcional, por si lo agregamos luego)
   const [isMounted, setIsMounted] = useState(false);
 
+  const user = useAuthStore((state) => state.user);
+  // alert(user)
+
+  const logout = useAuthStore((state) => state.logout);
   const totalItems = useCartStore((state) => state.getTotalPrice());
   const clearCart = useCartStore((state) => state.clearCart);
+
+  
+
 
 
   useEffect(() => {
     setIsMounted(true);
-    // 1. Leer usuario del LocalStorage al cargar
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
   }, []);
 
   const handleLogout = () => {
@@ -28,7 +32,8 @@ export default function Navbar() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     clearCart();
-    setUser(null);
+    logout();
+    // setUser(null);
     router.push("/auth/login"); // Mandar al login
   };
 
