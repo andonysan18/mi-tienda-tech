@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 
 import Navbar from "@/components/Navbar";
+import {Toaster} from "sonner"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,6 +33,8 @@ export default function RootLayout({
         {/* LA BARRA APARECERÁ EN TODAS LAS PÁGINAS */}
         <Navbar />
         
+        {/* richColors hace que el éxito sea verde y el error rojo automáticamente */}
+        <Toaster position="top-center" richColors />
         {/* Aquí se renderiza el contenido de cada página (page.tsx) */}
         <main>
           {children}

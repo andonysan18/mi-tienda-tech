@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Product } from "@/types/product.types"; // Reutilizamos el tipo que creaste
 import { useCartStore } from "@/store/cart.store";
 
+import { toast } from "sonner";
+
 export default function StorePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +84,8 @@ export default function StorePage() {
                       title="Agregar al Carrito"
                       onClick={() => {
                         addToCart(product);
-                        alert("Producto agregado al carrito ✅");
+                        // alert("Producto agregado al carrito ✅");
+                        toast.success(`Agregaste ${product.name} al carrito 🛒`);
                         
                       }}
                     >

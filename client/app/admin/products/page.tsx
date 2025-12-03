@@ -2,12 +2,12 @@
 import { useEffect, useState } from "react";
 import { Product, ProductFormData, ProductFormErrors } from "@/types/product.types";
 import { validateProductForm } from "@/utils/product.validations";
+// 1. IMPORTAMOS SONNER
+import { toast } from "sonner"; 
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  
-  // ESTADO PARA SABER SI ESTAMOS EDITANDO
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<ProductFormData>({
@@ -31,15 +31,12 @@ export default function AdminProductsPage() {
       const data = await res.json();
       setProducts(data);
     } catch (error) {
-      console.error("Error al cargar");
+      toast.error("Error al cargar los productos"); // Error de carga
     } finally {
       setLoading(false);
     }
   };
 
-  // --- ACCIONES ---
-
-  // 1. CARGAR DATOS EN EL FORMULARIO PARA EDITAR
   const handleEditClick = (product: Product) => {
     setEditingId(product.id);
     setFormData({
@@ -49,79 +46,102 @@ export default function AdminProductsPage() {
       stock: product.stock.toString(),
       imageUrl: product.imageUrl || ""
     });
-    setErrors({ isValid: true }); // Limpiar errores previos
-    // Scroll suave hacia arriba para ver el formulario
+    setErrors({ isValid: true });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Notificación opcional (a veces es mucho, pero para que sepas que se puede)
+    // toast.info(`Editando: ${product.name}`); 
   };
 
-  // 2. CANCELAR EDICIÓN
   const handleCancelEdit = () => {
     setEditingId(null);
     setFormData({ name: "", price: "", category: "Accesorios", stock: "", imageUrl: "" });
     setErrors({ isValid: true });
+    // toast.info("Edición cancelada");
   };
 
-  // 3. ELIMINAR
-  const handleDelete = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar este producto?")) return;
+  const handleDelete = (id: number) => {
+    // En lugar de borrar directo, lanzamos un Toast personalizado
+    toast("¿Estás seguro de eliminar este producto?", {
+      description: "Esta acción no se puede deshacer.",
+      action: {
+        label: "Eliminar",
+        onClick: () => deleteProductConfirmed(id), // Llamamos a la función real si confirma
+      },
+      cancel: {
+        label: "Cancelar",
+        onClick: () => toast.dismiss(),
+      },
+      duration: 5000, // Se queda 5 segundos esperando
+      actionButtonStyle: { backgroundColor: '#EF4444', color: 'white' } // Botón rojo peligroso
+    });
+  };
 
+  // Esta es la función que REALMENTE borra (separada para mayor orden)
+  const deleteProductConfirmed = async (id: number) => {
     try {
       const res = await fetch(`http://localhost:3001/api/products/${id}`, {
         method: "DELETE",
       });
+
       if (res.ok) {
-        fetchProducts(); // Recargar lista
-        // Si estábamos editando el que borramos, limpiar form
+        toast.success("Producto eliminado correctamente 🗑️");
+        fetchProducts(); // Recargar la lista
         if (editingId === id) handleCancelEdit();
       } else {
-        alert("No se pudo eliminar");
+        toast.error("No se pudo eliminar");
       }
     } catch (error) {
-      alert("Error de conexión");
+      toast.error("Error de conexión");
     }
   };
 
-  // 4. GUARDAR (CREAR O ACTUALIZAR)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validationResult = validateProductForm(formData);
     if (!validationResult.isValid) {
       setErrors(validationResult);
+      toast.warning("Revisa los campos marcados en rojo"); // ADVERTENCIA
       return;
     }
 
-    try {
-      let res;
-      if (editingId) {
-        // MODO EDICIÓN (PUT)
-        res = await fetch(`http://localhost:3001/api/products/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-      } else {
-        // MODO CREACIÓN (POST)
-        res = await fetch("http://localhost:3001/api/products", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-      }
+    // Promesa para mostrar carga mientras guarda (Efecto "Loading...")
+    const promise = (async () => {
+        let res;
+        if (editingId) {
+            res = await fetch(`http://localhost:3001/api/products/${editingId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+        } else {
+            res = await fetch("http://localhost:3001/api/products", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+        }
 
-      if (res.ok) {
-        alert(editingId ? "Producto actualizado ✅" : "Producto creado ✅");
-        handleCancelEdit(); // Limpia todo y vuelve a modo "Crear"
-        fetchProducts();
-      } else {
-        alert("Error en el servidor");
-      }
-    } catch (error) {
-      alert("Error de conexión");
-    }
+        if (!res.ok) throw new Error("Fallo en el servidor");
+        return res;
+    })();
+
+    // Sonner maneja la promesa automáticamente:
+    toast.promise(promise, {
+        loading: 'Guardando producto...',
+        success: () => {
+            handleCancelEdit(); // Limpia formulario
+            fetchProducts();    // Recarga lista
+            return editingId ? "¡Producto actualizado! 🔄" : "¡Producto creado! 🎉";
+        },
+        error: 'Ocurrió un error al guardar',
+    });
   };
 
-  // --- MANEJADORES DE INPUTS (Igual que antes) ---
+  // ... (El resto del código de los inputs y la tabla sigue IGUAL) ...
+  // Solo copio la parte de arriba porque el HTML no cambia, solo la lógica.
+  
+  // --- MANEJADORES DE INPUTS ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -147,7 +167,11 @@ export default function AdminProductsPage() {
             {editingId ? "✏️ Editando Producto" : "➕ Agregar Nuevo"}
           </h2>
           {editingId && (
-            <button onClick={handleCancelEdit} className="text-sm text-slate-400 hover:text-white underline">
+            <button onClick= { () => {
+              handleCancelEdit();
+              toast.info("Edición cancelada");
+            }} 
+            className="text-sm text-slate-400 hover:text-white underline">
               Cancelar edición
             </button>
           )}
@@ -222,7 +246,7 @@ export default function AdminProductsPage() {
             />
           </div>
 
-          {/* BOTÓN DE ACCIÓN */}
+          {/* BOTÓN */}
           <button 
             type="submit" 
             className={`font-bold rounded p-2 lg:col-span-1 md:col-span-2 text-white transition shadow-lg
@@ -240,7 +264,6 @@ export default function AdminProductsPage() {
             <div key={product.id} className={`bg-slate-800 rounded-lg p-4 border flex flex-col items-center group relative transition-all
               ${editingId === product.id ? 'border-yellow-500 ring-2 ring-yellow-500/20' : 'border-slate-700 hover:border-blue-500'}`}>
               
-              {/* BOTONES DE ACCIÓN (Aparecen al pasar el mouse o siempre en móvil) */}
               <div className="absolute top-2 right-2 flex gap-2 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <button 
                   onClick={() => handleEditClick(product)}

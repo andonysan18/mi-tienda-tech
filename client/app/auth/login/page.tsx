@@ -7,6 +7,7 @@ import Link from "next/link";
 import { validateLoginForm } from "@/utils/validations";
 import { LoginFormData, FormErrors } from "@/types/auth.types";
 import { useAuthStore } from "@/store/auth.store";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,6 +48,7 @@ export default function LoginPage() {
     // Validación antes de enviar
     const validationResult = validateLoginForm(formData);
     if (!validationResult.isValid) {
+      toast.error("Por favor revisa los campos en rojo");
       setErrors(validationResult);
       return;
     }
@@ -65,12 +67,14 @@ export default function LoginPage() {
         // Guardamos el token que nos dio el servidor en el navegador
         // localStorage.setItem("token", data.token);
         // localStorage.setItem("user", JSON.stringify(data.user)); // Guardamos nombre/rol
-        console.log("Logueando usuario:", data.user); // Para depurar
+        // console.log("Logueando usuario:", data.user); // Para depurar
         login(data.token, data.user);
+        toast.success(`¡Bienvenido de nuevo, ${data.user.name}! 👋`);
 
-        alert("¡Bienvenido de nuevo! 👋");
+        // alert("¡Bienvenido de nuevo! 👋");
         router.push("/"); // Redirigimos al Home (o al Dashboard después)
       } else {
+        toast.error(data.message || "Credenciales incorrectas");
         setErrors({ general: data.message || "Credenciales incorrectas" });
       }
     } catch (err) {
