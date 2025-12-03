@@ -6,8 +6,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx watch src/index.ts"
-  },
+    "dev": "tsx watch src/index.ts",
+    "build": "prisma generate",
+    "start": "tsx src/index.ts"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
