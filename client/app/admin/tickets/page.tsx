@@ -13,7 +13,7 @@ export default function AdminTicketsPage() {
 
   const fetchTickets = async () => {
     try {
-      const res = await fetch("http://localhost:3001/api/repairs");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?process.env.NEXT_PUBLIC_API_URL:"http://localhost:3001"}/api/repairs`);
       const data = await res.json();
       setTickets(data);
     } catch (error) {
@@ -31,7 +31,7 @@ export default function AdminTicketsPage() {
 
     try {
       // 2. Petición al backend
-      const res = await fetch(`http://localhost:3001/api/repairs/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?process.env.NEXT_PUBLIC_API_URL:"http://localhost:3001"}/api/repairs/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),

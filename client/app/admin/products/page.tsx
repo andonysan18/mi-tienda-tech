@@ -27,7 +27,8 @@ export default function AdminProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3001/api/products");
+      // const res = await fetch("http://localhost:3001/api/products");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?process.env.NEXT_PUBLIC_API_URL:"http://localhost:3001"}/api/products`)
       const data = await res.json();
       setProducts(data);
     } catch (error) {
@@ -79,7 +80,7 @@ export default function AdminProductsPage() {
   // Esta es la función que REALMENTE borra (separada para mayor orden)
   const deleteProductConfirmed = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/products/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?process.env.NEXT_PUBLIC_API_URL:"http://localhost:3001"}/api/products/${id}`, {
         method: "DELETE",
       });
 
@@ -109,13 +110,13 @@ export default function AdminProductsPage() {
     const promise = (async () => {
         let res;
         if (editingId) {
-            res = await fetch(`http://localhost:3001/api/products/${editingId}`, {
+            res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?process.env.NEXT_PUBLIC_API_URL:"http://localhost:3001"}/api/products/${editingId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
             });
         } else {
-            res = await fetch("http://localhost:3001/api/products", {
+            res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?process.env.NEXT_PUBLIC_API_URL:"http://localhost:3001"}/api/products`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

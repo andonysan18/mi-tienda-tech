@@ -7,39 +7,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 1. USUARIOS
 model User {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique
+  id        Int            @id @default(autoincrement())
+  email     String         @unique
   password  String
   name      String?
-  role      Role      @default(CLIENT)
-  
-  repairs   RepairTicket[]
+  createdAt DateTime       @default(now())
+  role      Role           @default(CLIENT)
   orders    Order[]
-  
-  createdAt DateTime  @default(now())
+  repairs   RepairTicket[]
 }
 
-enum Role {
-  CLIENT
-  ADMIN
-  TECNICO
-}
-
-// 2. TALLER
 model RepairTicket {
   id               String       @id @default(uuid())
   deviceModel      String
   issueDescription String
   status           RepairStatus @default(PENDIENTE)
   estimatedCost    Float?
-  
   userId           Int?
-  user             User?        @relation(fields: [userId], references: [id])
-  
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
+  user             User?        @relation(fields: [userId], references: [id])
+}
+
+model Product {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  stock       Int         @default(0)
+  imageUrl    String?
+  category    String
+  createdAt   DateTime    @default(now())
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  total     Float
+  status    OrderStatus @default(PAGADO)
+  userId    Int
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  quantity  Int
+  price     Float
+  orderId   Int
+  productId Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+  TECNICO
 }
 
 enum RepairStatus {
@@ -49,46 +75,6 @@ enum RepairStatus {
   EN_REPARACION
   LISTO
   ENTREGADO
-}
-
-// 3. TIENDA
-model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  stock       Int      @default(0)
-  imageUrl    String?
-  category    String
-  
-  orderItems  OrderItem[]
-  
-  createdAt   DateTime @default(now())
-}
-
-// 4. VENTAS
-model Order {
-  id        Int         @id @default(autoincrement())
-  total     Float
-  status    OrderStatus @default(PAGADO)
-  
-  userId    Int
-  user      User        @relation(fields: [userId], references: [id])
-  items     OrderItem[]
-  
-  createdAt DateTime    @default(now())
-}
-
-model OrderItem {
-  id        Int     @id @default(autoincrement())
-  quantity  Int
-  price     Float
-  
-  orderId   Int
-  order     Order   @relation(fields: [orderId], references: [id])
-  
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
 }
 
 enum OrderStatus {
