@@ -9,6 +9,7 @@ import Link from "next/link";
 import { validateRegisterForm } from "@/utils/validations"; 
 // Si "@/" te da error, cambia por: "../../../types/auth.types"
 import { RegisterFormData, FormErrors } from "@/types/auth.types"; 
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const router = useRouter(); //
@@ -83,10 +84,12 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("¡Cuenta creada con éxito! 🚀");
+        // alert("¡Cuenta creada con éxito! 🚀");
+        toast.success("¡Cuenta creada con éxito! 🚀");
         router.push("/auth/login"); // Redirigir al login
       } else {
         // Error que viene del servidor (ej: "El email ya existe")
+        toast.error(data.message || "Error al registrarse");
         setErrors({ general: data.message || "Error al registrarse" });
       }
     } catch (err) {
