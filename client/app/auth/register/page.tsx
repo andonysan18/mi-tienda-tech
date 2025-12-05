@@ -74,7 +74,7 @@ export default function RegisterPage() {
       // Separamos confirmPassword porque el Backend no lo necesita
       const { confirmPassword, ...dataToSend } = formData;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?process.env.NEXT_PUBLIC_API_URL:"http://localhost:3001"}/api/auth/register`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?process.env.NEXT_PUBLIC_API_URL:"http://localhost:3001/"}api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dataToSend),

@@ -18,7 +18,15 @@ export const getProducts = async (req: Request, res: Response) => {
 // 2. CREAR UN PRODUCTO (Solo Admin)
 export const createProduct = async (req: Request, res: Response) => {
   try {
+
+    if (!req.body) {
+      return res.status(400).json({
+        error: "No se recibió el body en la petición"
+      });
+    }
     const { name, price, category, stock, imageUrl } = req.body;
+
+    console.log(req.body);
 
     const newProduct = await prisma.product.create({
       data: {
@@ -29,10 +37,17 @@ export const createProduct = async (req: Request, res: Response) => {
         imageUrl: imageUrl || 'https://via.placeholder.com/300' // Imagen por defecto si no ponen nada
       }
     });
-
+    res.json(newProduct);
     res.status(201).json(newProduct);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al crear producto' });
+  } catch (error: any) {
+      // 2. IMPORTANTE: Imprimir el error real en la consola
+      console.error("❌ ERROR CRÍTICO EN BACKEND:", error);
+
+      res.status(500).json({ 
+        error: 'Error al crear producto',
+        details: error.message,
+        meta: error.meta
+      });
   }
 };
 
