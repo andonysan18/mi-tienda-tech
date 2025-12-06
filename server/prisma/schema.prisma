@@ -31,15 +31,23 @@ model RepairTicket {
 }
 
 model Product {
-  id          Int         @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
   description String?
   price       Float
-  stock       Int         @default(0)
-  imageUrl    String?
+  stock       Int      @default(0)
+  imageUrl    String?  // Foto cuadrada (Catálogo)
   category    String
-  createdAt   DateTime    @default(now())
+  
+  // --- CAMPOS DE MARKETING ---
+  isFeatured  Boolean  @default(false)
+  discount    Int      @default(0)
+  bannerUrl   String?  // NUEVO: Foto ancha para el carrusel (PRO)
+  // ---------------------
+
   orderItems  OrderItem[]
+  
+  createdAt   DateTime @default(now())
 }
 
 model Order {

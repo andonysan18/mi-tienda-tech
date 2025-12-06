@@ -15,18 +15,13 @@ export const getProducts = async (req: Request, res: Response) => {
   }
 };
 
-// 2. CREAR UN PRODUCTO (Solo Admin)
+// 2. CREAR UN PRODUCTO
 export const createProduct = async (req: Request, res: Response) => {
   try {
+    // Agregamos bannerUrl, isFeatured, discount al destructuring
+    const { name, price, category, stock, imageUrl, bannerUrl, isFeatured, discount } = req.body;
 
-    if (!req.body) {
-      return res.status(400).json({
-        error: "No se recibió el body en la petición"
-      });
-    }
-    const { name, price, category, stock, imageUrl } = req.body;
-
-    console.log(req.body);
+    console.log("Datos recibidos:", req.body);
 
     const newProduct = await prisma.product.create({
       data: {
@@ -34,20 +29,19 @@ export const createProduct = async (req: Request, res: Response) => {
         price: parseFloat(price),
         category,
         stock: parseInt(stock),
-        imageUrl: imageUrl || 'https://via.placeholder.com/300' // Imagen por defecto si no ponen nada
+        imageUrl: imageUrl || 'https://via.placeholder.com/300',
+        // Nuevos campos opcionales
+        bannerUrl: bannerUrl || null,
+        isFeatured: isFeatured || false,
+        discount: discount ? parseInt(discount) : 0,
       }
     });
-    res.json(newProduct);
+    
     res.status(201).json(newProduct);
-  } catch (error: any) {
-      // 2. IMPORTANTE: Imprimir el error real en la consola
-      console.error("❌ ERROR CRÍTICO EN BACKEND:", error);
 
-      res.status(500).json({ 
-        error: 'Error al crear producto',
-        details: error.message,
-        meta: error.meta
-      });
+  } catch (error: any) {
+    console.error("❌ ERROR CRÍTICO EN BACKEND:", error);
+    res.status(500).json({ error: 'Error al crear producto', details: error.message });
   }
 };
 
@@ -55,7 +49,8 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { name, price, category, stock, imageUrl } = req.body;
+    // Agregamos los nuevos campos aquí también
+    const { name, price, category, stock, imageUrl, bannerUrl, isFeatured, discount } = req.body;
 
     const updatedProduct = await prisma.product.update({
       where: { id: parseInt(id) },
@@ -64,7 +59,10 @@ export const updateProduct = async (req: Request, res: Response): Promise<any> =
         price: parseFloat(price),
         category,
         stock: parseInt(stock),
-        imageUrl
+        imageUrl,
+        bannerUrl,
+        isFeatured,
+        discount: discount ? parseInt(discount) : 0
       }
     });
 
