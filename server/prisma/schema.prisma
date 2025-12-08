@@ -24,6 +24,10 @@ model RepairTicket {
   issueDescription String
   status           RepairStatus @default(PENDIENTE)
   estimatedCost    Float?
+  
+  // ✅ NUEVO CAMPO: Guardamos el WhatsApp aquí
+  contactPhone     String?      
+  
   userId           Int?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt

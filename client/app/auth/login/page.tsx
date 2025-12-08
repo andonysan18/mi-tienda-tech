@@ -3,27 +3,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-// Importaciones de tu arquitectura limpia
 import { validateLoginForm } from "@/utils/validations";
 import { LoginFormData, FormErrors } from "@/types/auth.types";
 import { useAuthStore } from "@/store/auth.store";
 import { toast } from "sonner";
+import { 
+  Mail, 
+  Lock, 
+  ArrowRight, 
+  Loader2, 
+  AlertCircle 
+} from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-
-  // 1. Estado Tipado
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-  });
-
-  const [errors, setErrors] = useState<FormErrors>({});
-
   const login = useAuthStore((state) => state.login);
 
+  const [formData, setFormData] = useState<LoginFormData>({ email: "", password: "" });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [loading, setLoading] = useState(false);
 
-  // 2. Manejadores (Son iguales a los de Registro, ¡reutilización mental!)
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -36,25 +35,23 @@ export default function LoginPage() {
     const { name } = e.target;
     const validationResult = validateLoginForm(formData);
     const errorInField = validationResult[name as keyof FormErrors];
-
-    if (errorInField) {
-      setErrors((prev) => ({ ...prev, [name]: errorInField }));
-    }
+    if (errorInField) setErrors((prev) => ({ ...prev, [name]: errorInField }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
-    // Validación antes de enviar
     const validationResult = validateLoginForm(formData);
     if (!validationResult.isValid) {
-      toast.error("Por favor revisa los campos en rojo");
+      toast.error("Por favor revisa los campos");
       setErrors(validationResult);
+      setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?process.env.NEXT_PUBLIC_API_URL:"http://localhost:3001/"}api/auth/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/"}api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -63,83 +60,97 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // --- AQUÍ OCURRE LA MAGIA DEL LOGIN ---
-        // Guardamos el token que nos dio el servidor en el navegador
-        // localStorage.setItem("token", data.token);
-        // localStorage.setItem("user", JSON.stringify(data.user)); // Guardamos nombre/rol
-        // console.log("Logueando usuario:", data.user); // Para depurar
         login(data.token, data.user);
-        toast.success(`¡Bienvenido de nuevo, ${data.user.name}! 👋`);
-
-        // alert("¡Bienvenido de nuevo! 👋");
-        router.push("/"); // Redirigimos al Home (o al Dashboard después)
+        toast.success(`¡Bienvenido, ${data.user.name.split(' ')[0]}!`, {
+            description: "Has iniciado sesión correctamente."
+        });
+        router.push("/"); 
       } else {
-        toast.error(data.message || "Credenciales incorrectas");
+        toast.error("Error de acceso", { description: data.message || "Credenciales inválidas" });
         setErrors({ general: data.message || "Credenciales incorrectas" });
       }
     } catch (err) {
-      setErrors({ general: "Error de conexión con el servidor." });
+      toast.error("Error de conexión");
+      setErrors({ general: "No se pudo conectar con el servidor." });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 text-white">
-      <div className="w-full max-w-md space-y-8 rounded-xl bg-slate-800 p-8 shadow-lg border border-slate-700">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-blue-500">Iniciar Sesión</h2>
-          <p className="mt-2 text-sm text-slate-400">Accede a tu cuenta de Tienda Tech</p>
+    <div className="flex min-h-screen items-center justify-center bg-black px-4 text-zinc-200 font-sans selection:bg-indigo-500/30 relative overflow-hidden">
+      
+      {/* Fondo Grid & Glow */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/20 opacity-40 blur-[100px] rounded-full pointer-events-none"></div>
+
+      {/* Card Principal */}
+      <div className="w-full max-w-md bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10 animate-in fade-in zoom-in-95 duration-500">
+        
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-white tracking-tight mb-2">Bienvenido de nuevo</h2>
+          <p className="text-zinc-400 text-sm">Ingresa tus credenciales para continuar.</p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-5" onSubmit={handleSubmit}>
           
           {/* EMAIL */}
-          <div>
-            <input
-              name="email"
-              type="text"
-              placeholder="Correo Electrónico"
-              value={formData.email}
-              className={`w-full rounded-lg bg-slate-700 border px-4 py-3 focus:outline-none transition-colors
-                ${errors.email ? 'border-red-500 bg-red-500/10' : 'border-slate-600 focus:border-blue-500'}`}
-              onChange={handleChange}
-              onBlur={handleBlur}
-            />
-            {errors.email && <p className="text-red-400 text-xs mt-1 ml-1">{errors.email}</p>}
+          <div className="space-y-1.5">
+            <div className="relative group">
+               <Mail className="absolute left-4 top-3.5 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+               <input
+                 name="email"
+                 type="text"
+                 placeholder="nombre@ejemplo.com"
+                 value={formData.email}
+                 className={`w-full bg-black/50 border rounded-xl pl-12 pr-4 py-3 text-white outline-none transition-all placeholder:text-zinc-600
+                   ${errors.email ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`}
+                 onChange={handleChange}
+                 onBlur={handleBlur}
+               />
+            </div>
+            {errors.email && <p className="text-red-400 text-xs ml-1 flex items-center gap-1"><AlertCircle size={12}/> {errors.email}</p>}
           </div>
 
           {/* PASSWORD */}
-          <div>
-            <input
-              name="password"
-              type="password"
-              placeholder="Contraseña"
-              value={formData.password}
-              className={`w-full rounded-lg bg-slate-700 border px-4 py-3 focus:outline-none transition-colors
-                ${errors.password ? 'border-red-500 bg-red-500/10' : 'border-slate-600 focus:border-blue-500'}`}
-              onChange={handleChange}
-              onBlur={handleBlur}
-            />
-            {errors.password && <p className="text-red-400 text-xs mt-1 ml-1">{errors.password}</p>}
+          <div className="space-y-1.5">
+            <div className="relative group">
+               <Lock className="absolute left-4 top-3.5 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+               <input
+                 name="password"
+                 type="password"
+                 placeholder="••••••••••••"
+                 value={formData.password}
+                 className={`w-full bg-black/50 border rounded-xl pl-12 pr-4 py-3 text-white outline-none transition-all placeholder:text-zinc-600
+                   ${errors.password ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'}`}
+                 onChange={handleChange}
+                 onBlur={handleBlur}
+               />
+            </div>
+            {errors.password && <p className="text-red-400 text-xs ml-1 flex items-center gap-1"><AlertCircle size={12}/> {errors.password}</p>}
           </div>
 
           {/* ERROR GENERAL */}
           {errors.general && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded text-sm text-center animate-pulse">
-              {errors.general}
+            <div className="bg-red-500/10 border border-red-500/20 text-red-300 p-3 rounded-xl text-sm text-center flex items-center justify-center gap-2">
+               <AlertCircle size={16} /> {errors.general}
             </div>
           )}
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-blue-600 py-3 font-bold hover:bg-blue-500 transition mt-6 shadow-lg shadow-blue-500/20"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
           >
-            Ingresar
+            {loading ? <Loader2 className="animate-spin" /> : <>Ingresar <ArrowRight size={18}/></>}
           </button>
         </form>
 
-        <p className="text-center text-slate-400 mt-4">
-          ¿No tienes cuenta? <Link href="/auth/register" className="text-blue-400 hover:underline">Regístrate gratis</Link>
-        </p>
+        <div className="mt-8 text-center pt-6 border-t border-white/5">
+          <p className="text-zinc-500 text-sm">
+            ¿Aún no tienes cuenta? <Link href="/auth/register" className="text-indigo-400 hover:text-indigo-300 font-medium hover:underline transition-colors">Regístrate gratis</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

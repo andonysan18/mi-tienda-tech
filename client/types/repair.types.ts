@@ -3,7 +3,8 @@ export interface RepairTicket {
   deviceModel: string;
   issueDescription: string;
   status: 'PENDIENTE' | 'EN_DIAGNOSTICO' | 'ESPERANDO_REPUESTO' | 'EN_REPARACION' | 'LISTO' | 'ENTREGADO';
-  estimatedCost: number | null;
+  contactPhone: string;
+  estimatedCost: number | 0;
   createdAt: string;
 }
 

@@ -4,16 +4,25 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cart.store";
 import { useAuthStore } from "@/store/auth.store";
+import { 
+  ShoppingBag, 
+  LogOut, 
+  User, 
+  LayoutDashboard, 
+  Menu, 
+  X,
+  Zap 
+} from "lucide-react"; // Asegúrate de tener instalada lucide-react
 
 export default function Navbar() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
-  // CORRECCIÓN IMPORTANTE: Usamos getTotalItems() para la cantidad, no el precio.
-  const totalItems = useCartStore((state) => state.getTotalPrice());
+  const totalItems = useCartStore((state) => state.getTotalPrice()); // Asegúrate que tu store tenga este método o usa length
   const clearCart = useCartStore((state) => state.clearCart);
 
   useEffect(() => {
@@ -29,117 +38,157 @@ export default function Navbar() {
   if (!isMounted) return null;
 
   return (
-    <nav className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-xl backdrop-blur-md bg-opacity-90">
-      <div className="container mx-auto p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+    <>
+      {/* NAVBAR STICKY GLASSMORPHISM */}
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-black/60 backdrop-blur-xl transition-all">
+        <div className="container mx-auto px-6 h-16 flex items-center justify-between gap-4">
 
-        {/* LOGO */}
-        <Link href="/" className="text-2xl font-bold flex items-center gap-2 hover:text-blue-400 transition group">
-          <span className="text-3xl group-hover:scale-110 transition-transform">📱</span>
-          <span><span className="text-blue-500">Tienda</span>Tech</span>
-        </Link>
+          {/* 1. LOGO: Minimalista & Tech */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="bg-gradient-to-tr from-indigo-500 to-purple-500 p-1.5 rounded-lg group-hover:scale-110 transition-transform duration-300">
+               <Zap className="text-white fill-white" size={16} />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-white">
+              Tienda<span className="text-indigo-400">Tech</span>
+            </span>
+          </Link>
 
-        {/* MENÚ */}
-        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6 w-full md:w-auto">
+          {/* 2. MENÚ DESKTOP (Centrado) */}
+          <div className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/5">
+            {[
+              { name: "Inicio", href: "/" },
+              { name: "Catálogo", href: "/store" },
+            ].map((link) => (
+              <Link 
+                key={link.href}
+                href={link.href} 
+                className="px-5 py-1.5 rounded-full text-sm font-medium text-zinc-400 hover:text-white hover:bg-white/10 transition-all"
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
 
-          {/* Enlaces de Navegación */}
-          <div className="flex items-center gap-4 bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700/50">
-            <Link href="/" className="hover:text-blue-400 text-sm font-medium transition px-2">Inicio</Link>
-            <Link href="/store" className="hover:text-blue-400 text-sm font-medium transition px-2">Tienda</Link>
-
-            {/* CARRITO */}
-            <Link href="/cart" className="relative hover:text-blue-400 transition pl-2 border-l border-slate-700 group">
-              <span className="text-xl group-hover:scale-110 inline-block">🛒</span>
+          {/* 3. ACCIONES DERECHA */}
+          <div className="flex items-center gap-4">
+            
+            {/* CARRITO (Icono limpio con badge) */}
+            <Link 
+              href="/cart" 
+              className="relative group p-2 hover:bg-white/5 rounded-full transition-colors"
+            >
+              <ShoppingBag size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
               {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-slate-900 shadow-sm animate-bounce">
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white ring-2 ring-black">
                   {totalItems}
                 </span>
               )}
             </Link>
-          </div>
 
-          {/* ÁREA DE USUARIO */}
-          {user ? (
-            <div className="flex items-center gap-2 bg-slate-800 rounded-full p-1 pl-2 pr-2 border border-slate-700 shadow-sm transition hover:border-slate-600">
+            {/* SEPARADOR VERTICAL */}
+            <div className="h-6 w-px bg-white/10 hidden md:block"></div>
 
-              {/* Avatar con Inicial */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center shadow-lg">
-                <span className="text-xs font-bold text-white uppercase">
-                  {user.name.charAt(0)}
-                </span>
+            {/* ÁREA DE USUARIO */}
+            {user ? (
+              <div className="hidden md:flex items-center gap-3 pl-2">
+                
+                {/* Info Usuario */}
+                <div className="text-right hidden lg:block">
+                  <p className="text-xs text-zinc-500 font-medium">Conectado como</p>
+                  <p className="text-sm font-bold text-white leading-none">{user.name.split(' ')[0]}</p>
+                </div>
+
+                {/* Dropdown / Botones de Acción */}
+                <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-full p-1 pl-1 pr-1">
+                   {/* Avatar */}
+                   <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white border border-black/50">
+                      {user.name.charAt(0)}
+                   </div>
+                   
+                   {/* Botón Admin */}
+                   {user.role === 'ADMIN' && (
+                     <Link
+                       href="/admin"
+                       title="Panel Admin"
+                       className="p-2 text-zinc-400 hover:text-yellow-400 hover:bg-yellow-400/10 rounded-full transition-all"
+                     >
+                       <LayoutDashboard size={16} />
+                     </Link>
+                   )}
+
+                   {/* Botón Salir */}
+                   <button
+                     onClick={handleLogout}
+                     title="Cerrar Sesión"
+                     className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded-full transition-all"
+                   >
+                     <LogOut size={16} />
+                   </button>
+                </div>
               </div>
-
-              {/* Nombre y Rol */}
-              <div className="hidden sm:block px-2 text-left">
-                <p className="text-[10px] text-slate-400 leading-none font-medium">Hola,</p>
-                <p className="text-sm font-bold text-white leading-none max-w-[100px] truncate">
-                  {user.name.split(' ')[0]}
-                </p>
-              </div>
-
-              {/* Separador */}
-              <div className="w-px h-6 bg-slate-700 mx-1"></div>
-
-              {/* Botones de Acción */}
-              <div className="flex items-center gap-1">
-                {user.role === 'ADMIN' && (
-                  <Link
-                    href="/admin"
-                    title="Panel de Administrador"
-                    className="p-1.5 text-yellow-400 hover:bg-yellow-400/10 rounded-full transition"
-                  >
-                    {/* Icono de Ajustes (Tuerca) */}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      {/* Estructura de la casa */}
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                      {/* La puerta */}
-                      <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                    </svg>
-                  </Link>
-                )}
-
-                <button
-                  onClick={handleLogout}
-                  title="Cerrar Sesión"
-                  className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-full transition"
+            ) : (
+              // NO LOGUEADO (Botones High Contrast)
+              <div className="hidden md:flex items-center gap-3">
+                <Link
+                  href="/auth/login"
+                  className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
                 >
-                  {/* Icono de Salir (Log out) */}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                  </svg>
-                </button>
+                  Ingresar
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="bg-white text-black px-5 py-2 rounded-full text-sm font-bold hover:bg-zinc-200 transition-all active:scale-95 shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]"
+                >
+                  Registrarse
+                </Link>
               </div>
-            </div>
-          ) : (
-            // NO LOGUEADO: Botones estilo "Pill" modernos
-            <div className="flex items-center gap-2">
-              <Link
-                href="/auth/login"
-                className="text-slate-300 hover:text-white text-sm font-medium px-4 py-2 hover:bg-slate-800 rounded-full transition"
-              >
-                Ingresar
-              </Link>
-              <Link
-                href="/auth/register"
-                className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-5 py-2 rounded-full shadow-lg shadow-blue-900/20 transition hover:scale-105 active:scale-95"
-              >
-                Registro
-              </Link>
-            </div>
-          )}
+            )}
+
+            {/* HAMBURGER MENU (Móvil) */}
+            <button 
+              className="md:hidden p-2 text-zinc-400 hover:text-white"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+
+        {/* MENÚ MÓVIL DESPLEGABLE */}
+        {isMobileMenuOpen && (
+           <div className="md:hidden border-t border-white/10 bg-black/95 backdrop-blur-xl absolute w-full p-4 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-top-5">
+              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-400 hover:text-white py-2">Inicio</Link>
+              <Link href="/store" onClick={() => setIsMobileMenuOpen(false)} className="text-zinc-400 hover:text-white py-2">Catálogo</Link>
+              
+              <div className="h-px w-full bg-white/10 my-1"></div>
+              
+              {user ? (
+                 <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                       <div className="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xs">{user.name.charAt(0)}</div>
+                       <div>
+                          <p className="text-white font-bold text-sm">{user.name}</p>
+                          <p className="text-zinc-500 text-xs">{user.email || "Usuario"}</p>
+                       </div>
+                    </div>
+                    {user.role === 'ADMIN' && (
+                       <Link href="/admin" className="flex items-center gap-2 text-sm text-yellow-400 py-2">
+                          <LayoutDashboard size={16}/> Panel Admin
+                       </Link>
+                    )}
+                    <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-400 py-2 text-left">
+                       <LogOut size={16}/> Cerrar Sesión
+                    </button>
+                 </div>
+              ) : (
+                 <div className="flex flex-col gap-3">
+                    <Link href="/auth/login" className="text-center text-white border border-white/10 py-2.5 rounded-xl">Ingresar</Link>
+                    <Link href="/auth/register" className="text-center bg-white text-black py-2.5 rounded-xl font-bold">Registrarse</Link>
+                 </div>
+              )}
+           </div>
+        )}
+      </nav>
+    </>
   );
 }

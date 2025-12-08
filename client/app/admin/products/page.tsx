@@ -5,19 +5,19 @@ import { validateProductForm } from "@/utils/product.validations";
 import { toast } from "sonner"; 
 import { 
   Plus, X, Trash2, Edit, Image as ImageIcon, Search, 
-  ChevronLeft, ChevronRight, Filter, ShoppingBag, MoreVertical
+  Filter, ShoppingBag, MoreVertical, Package, Zap, ChevronRight, Save
 } from "lucide-react";
 
-// --- COMPONENTE UI: MODAL ---
+// --- COMPONENTE UI: MODAL (Estilo Tech) ---
 const Modal = ({ isOpen, onClose, title, children }: any) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-      <div className="relative bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center p-5 border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
-          <h3 className="text-xl font-bold text-white">{title}</h3>
-          <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 transition-colors"><X size={20}/></button>
+      <div className="relative bg-zinc-900 border border-white/10 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center p-6 border-b border-white/10 sticky top-0 bg-zinc-900 z-10">
+          <h3 className="text-xl font-bold text-white tracking-tight">{title}</h3>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={20}/></button>
         </div>
         <div className="p-6">{children}</div>
       </div>
@@ -25,15 +25,15 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
   );
 };
 
-// --- COMPONENTE UI: INPUT ---
+// --- COMPONENTE UI: INPUT (Estilo Tech) ---
 const FormInput = ({ label, error, ...props }: any) => (
-  <div className="flex flex-col gap-1.5">
-    <label className="text-xs text-slate-400 font-medium uppercase tracking-wider">{label}</label>
+  <div className="flex flex-col gap-2">
+    <label className="text-xs text-zinc-400 font-bold uppercase tracking-wider">{label}</label>
     <input 
-      className={`bg-slate-950 border rounded-lg p-3 text-white text-sm focus:ring-2 focus:ring-blue-500/50 outline-none transition-all ${error ? 'border-red-500/50' : 'border-slate-800 focus:border-blue-500'}`} 
+      className={`bg-black/50 border rounded-xl p-3 text-white text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all placeholder:text-zinc-600 ${error ? 'border-red-500/50' : 'border-white/10 focus:border-indigo-500'}`} 
       {...props} 
     />
-    {error && <span className="text-xs text-red-400">{error}</span>}
+    {error && <span className="text-xs text-red-400 flex items-center gap-1">⚠️ {error}</span>}
   </div>
 );
 
@@ -141,209 +141,238 @@ export default function AdminProductsPage() {
     setFormData(prev => ({ ...prev, [name]: val }));
   };
 
+  const formatPrice = (price: string | number) => {
+    return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0 }).format(Number(price));
+  };
+
   return (
-    <div className="max-w-7xl mx-auto min-h-screen pb-24 px-4 sm:px-6 lg:px-8 pt-6">
+    <div className="min-h-screen bg-black text-zinc-200 font-sans selection:bg-indigo-500/30">
       
-      {/* --- HEADER RESPONSIVE --- */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Inventario</h1>
-          <p className="text-slate-400 text-sm mt-1">
-             Gestiona {products.length} productos
-          </p>
-        </div>
-        <button onClick={() => openModal()} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-lg shadow-blue-900/20 active:scale-95">
-          <Plus size={20} /> <span className="sm:hidden">Nuevo</span> <span className="hidden sm:inline">Agregar Producto</span>
-        </button>
+      {/* Fondo Grid */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
       </div>
 
-      {/* --- CONTROLES (Búsqueda + Filtro) --- */}
-      <div className="bg-slate-900 p-4 rounded-xl sm:rounded-b-none border border-slate-800 sm:border-b-0 flex flex-col md:flex-row gap-3 mb-4 sm:mb-0">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-3.5 text-slate-500" size={18} />
-          <input 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar producto..." 
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-3 text-sm text-white focus:border-blue-500 outline-none transition-all" 
-          />
-          {searchTerm && (
-            <button onClick={() => setSearchTerm("")} className="absolute right-3 top-3.5 text-slate-500 hover:text-white"><X size={16}/></button>
-          )}
-        </div>
-
-        <div className="relative md:w-64">
-          <Filter className="absolute left-3 top-3.5 text-slate-500 pointer-events-none" size={18}/>
-          <select 
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-8 py-3 text-slate-300 text-sm focus:border-blue-500 outline-none cursor-pointer"
-          >
-            <option value="Todos">Todas las categorías</option>
-            <option value="Accesorios">Accesorios</option>
-            <option value="Audio">Audio</option>
-            <option value="Celulares">Celulares</option>
-            <option value="Cargadores">Cargadores</option>
-          </select>
-        </div>
-      </div>
-
-      {/* --- VISTA 1: TABLA PARA PC (Hidden en móvil) --- */}
-      <div className="hidden md:block overflow-x-auto bg-slate-900 rounded-b-xl border border-slate-800 shadow-xl">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider bg-slate-950/50">
-              <th className="p-4 font-medium">Producto</th>
-              <th className="p-4 font-medium">Categoría</th>
-              <th className="p-4 font-medium">Precio</th>
-              <th className="p-4 font-medium">Stock</th>
-              <th className="p-4 font-medium text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {loading && <tr><td colSpan={5} className="p-8 text-center text-slate-500">Cargando...</td></tr>}
-            {!loading && filteredProducts.map((p) => (
-              <tr key={p.id} className="group hover:bg-slate-800/50 transition-colors">
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-slate-950 border border-slate-800 overflow-hidden shrink-0">
-                      {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-cover"/> : <div className="flex items-center justify-center h-full"><ImageIcon size={16} className="text-slate-600"/></div>}
-                    </div>
-                    <div>
-                      <p className="font-medium text-white text-sm">{p.name} {p.isFeatured && "⭐"}</p>
-                      {Number(p.discount) > 0 && <span className="text-[10px] text-red-400 font-bold">-{p.discount}% OFF</span>}
-                    </div>
-                  </div>
-                </td>
-                <td className="p-4"><span className="px-2 py-1 rounded bg-slate-950 border border-slate-800 text-xs text-slate-300">{p.category}</span></td>
-                <td className="p-4 text-sm text-slate-200 font-mono">${p.price}</td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${p.stock > 5 ? 'bg-green-500' : p.stock > 0 ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
-                    <span className="text-sm text-slate-300">{p.stock}</span>
-                  </div>
-                </td>
-                <td className="p-4 text-right">
-                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openModal(p)} className="p-2 text-slate-400 hover:text-blue-400 rounded"><Edit size={18}/></button>
-                    <button onClick={() => handleDelete(p.id)} className="p-2 text-slate-400 hover:text-red-400 rounded"><Trash2 size={18}/></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* --- VISTA 2: TARJETAS PARA MÓVIL (Hidden en PC) --- */}
-      {/* --- VISTA 2: TARJETAS PARA MÓVIL (CORREGIDO) --- */}
-      <div className="md:hidden space-y-3">
-        {loading && <div className="p-8 text-center text-slate-500 animate-pulse">Cargando productos...</div>}
+      <div className="max-w-7xl mx-auto pb-24 px-4 sm:px-6 lg:px-8 pt-8 relative z-10">
         
-        {!loading && filteredProducts.length === 0 && (
-          <div className="text-center py-10 text-slate-500 bg-slate-900/50 rounded-xl border border-slate-800 border-dashed">
-             <ShoppingBag className="mx-auto mb-2 opacity-50" size={32}/>
-             <p className="text-sm">No se encontraron productos</p>
+        {/* --- HEADER --- */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4 border-b border-white/10 pb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+               Inventario
+               <span className="text-xs bg-zinc-800 text-zinc-400 px-2 py-1 rounded-md border border-white/5 font-mono">v2.0</span>
+            </h1>
+            <p className="text-zinc-400 mt-2 flex items-center gap-2">
+               <Package size={16} /> Gestionando <strong className="text-white">{products.length}</strong> productos
+            </p>
           </div>
-        )}
-
-        {!loading && filteredProducts.map((p) => (
-          <div key={p.id} className="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-stretch gap-3 shadow-sm">
-            
-            {/* 1. Imagen (Lado Izquierdo) */}
-            <div className="w-20 h-auto bg-slate-950 rounded-lg border border-slate-800 overflow-hidden shrink-0 relative">
-               {p.imageUrl ? (
-                 <img src={p.imageUrl} className="w-full h-full object-cover absolute inset-0"/>
-               ) : (
-                 <div className="w-full h-full flex items-center justify-center"><ImageIcon size={20} className="text-slate-600"/></div>
-               )}
-            </div>
-
-            {/* 2. Info del Producto (Centro) */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center py-1">
-               <h3 className="font-bold text-white text-sm truncate mb-1">{p.name}</h3>
-               <p className="text-xs text-slate-400 mb-2">{p.category}</p>
-               
-               <div className="flex items-center gap-2 mt-auto">
-                  <span className="font-mono text-white font-medium bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-xs shadow-inner">
-                    ${p.price}
-                  </span>
-                  {p.stock <= 5 && (
-                    <span className="text-[10px] text-red-400 font-bold bg-red-400/10 px-1.5 py-0.5 rounded">
-                      ¡Quedan {p.stock}!
-                    </span>
-                  )}
-               </div>
-            </div>
-            
-            {/* 3. Botones de Acción (Columna Derecha) */}
-            <div className="flex flex-col justify-center gap-2 pl-2 border-l border-slate-800 ml-1">
-               <button 
-                 onClick={() => openModal(p)} 
-                 className="p-2.5 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 active:scale-95 transition-all flex items-center justify-center"
-               >
-                 <Edit size={18} />
-               </button>
-               <button 
-                 onClick={() => handleDelete(p.id)} 
-                 className="p-2.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 active:scale-95 transition-all flex items-center justify-center"
-               >
-                 <Trash2 size={18} />
-               </button>
-            </div>
-
-          </div>
-        ))}
-      </div>
-
-      {/* --- FORMULARIO EN MODAL (Responsive por defecto) --- */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "Editar Producto" : "Nuevo Producto"}>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <FormInput name="name" label="Nombre del Producto" placeholder="Ej. Smart TV 4K" value={formData.name} onChange={handleChange} error={errors.name} />
           
-          <div className="grid grid-cols-2 gap-4">
-            <FormInput name="price" label="Precio" type="number" value={formData.price} onChange={handleChange} error={errors.price} />
-            <FormInput name="stock" label="Stock" type="number" value={formData.stock} onChange={handleChange} error={errors.stock} />
+          <button 
+            onClick={() => openModal()} 
+            className="w-full sm:w-auto bg-white text-black hover:bg-zinc-200 px-6 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] active:scale-95 group"
+          >
+            <Plus size={20} /> 
+            <span>Agregar Producto</span>
+            <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+          </button>
+        </div>
+
+        {/* --- TOOLBAR --- */}
+        <div className="bg-zinc-900 border border-white/10 rounded-2xl p-2 flex flex-col md:flex-row gap-2 mb-8 shadow-xl">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-3 top-3 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+            <input 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por nombre..." 
+              className="w-full bg-black/40 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:border-indigo-500/50 outline-none transition-all placeholder:text-zinc-600" 
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm("")} className="absolute right-3 top-3 text-zinc-500 hover:text-white"><X size={16}/></button>
+            )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-slate-400 font-medium uppercase tracking-wider">Categoría</label>
-            <select name="category" className="bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white text-sm" value={formData.category} onChange={handleChange}>
-              <option>Accesorios</option><option>Audio</option><option>Celulares</option><option>Cargadores</option>
+          <div className="relative md:w-64 border-l border-white/5 pl-2 md:pl-0 border-t md:border-t-0 pt-2 md:pt-0">
+            <Filter className="absolute left-3 md:left-3 top-5 md:top-3 text-zinc-500 pointer-events-none" size={16}/>
+            <select 
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="w-full appearance-none bg-zinc-800/50 hover:bg-zinc-800 border border-white/5 rounded-xl pl-9 pr-8 py-2.5 text-zinc-300 text-sm focus:border-indigo-500/50 outline-none cursor-pointer transition-colors"
+            >
+              <option value="Todos">Todas las categorías</option>
+              <option value="Accesorios">Accesorios</option>
+              <option value="Audio">Audio</option>
+              <option value="Celulares">Celulares</option>
+              <option value="Cargadores">Cargadores</option>
             </select>
           </div>
+        </div>
 
-          <div className="space-y-3 pt-2">
-             <FormInput name="imageUrl" label="URL Imagen" value={formData.imageUrl} onChange={handleChange} error={errors.imageUrl} />
-             
-             {/* ✅ NUEVO: INPUT PARA BANNER */}
-             <FormInput 
-                name="bannerUrl" 
-                label="URL Banner (Opcional)" 
-                placeholder="https://..." 
-                value={formData.bannerUrl} 
-                onChange={handleChange} 
-             />
-             
-             <div className="flex gap-4 items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-white">
-                  <input type="checkbox" name="isFeatured" checked={formData.isFeatured} onChange={handleChange} className="accent-blue-500 w-4 h-4"/>
-                  Destacar Producto
-                </label>
-                <div className="flex items-center gap-2 border-l border-slate-800 pl-4 ml-auto">
-                  <span className="text-xs text-slate-400">Desc. %</span>
-                  <input name="discount" type="number" className="bg-transparent w-12 text-center text-sm text-white border-b border-slate-700 focus:border-blue-500 outline-none" value={formData.discount} onChange={handleChange} />
-                </div>
-             </div>
-          </div>
+        {/* --- VISTA TABLA (Desktop) --- */}
+        <div className="hidden md:block bg-zinc-900 rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-white/5 bg-black/20 text-xs text-zinc-500 font-bold uppercase tracking-wider">
+                <th className="p-5">Producto</th>
+                <th className="p-5">Categoría</th>
+                <th className="p-5">Precio</th>
+                <th className="p-5">Stock</th>
+                <th className="p-5 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading && <tr><td colSpan={5} className="p-12 text-center text-zinc-500 animate-pulse">Cargando inventario...</td></tr>}
+              
+              {!loading && filteredProducts.map((p) => (
+                <tr key={p.id} className="group hover:bg-white/[0.02] transition-colors">
+                  <td className="p-5">
+                    <div className="flex items-center gap-4">
+                      {/* Imagen con fondo blanco para resaltar */}
+                      <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shadow-sm shrink-0">
+                        {p.imageUrl ? (
+                            <img src={p.imageUrl} className="w-full h-full object-contain mix-blend-multiply"/> 
+                        ) : (
+                            <ImageIcon size={20} className="text-zinc-300"/>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-bold text-white text-sm group-hover:text-indigo-400 transition-colors">{p.name}</p>
+                        <div className="flex gap-2 mt-0.5">
+                            {p.isFeatured && <span className="text-[10px] bg-yellow-500/10 text-yellow-500 px-1.5 rounded border border-yellow-500/20">Destacado</span>}
+                            {Number(p.discount) > 0 && <span className="text-[10px] bg-red-500/10 text-red-400 px-1.5 rounded border border-red-500/20">-{p.discount}%</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-5">
+                      <span className="px-3 py-1 rounded-full bg-zinc-800 border border-white/5 text-xs text-zinc-300 font-medium">
+                          {p.category}
+                      </span>
+                  </td>
+                  <td className="p-5 text-sm font-bold text-white tabular-nums tracking-tight">
+                      {formatPrice(p.price)}
+                  </td>
+                  <td className="p-5">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${p.stock > 5 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : p.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                      <span className={`text-sm font-medium ${p.stock === 0 ? 'text-red-400' : 'text-zinc-300'}`}>
+                          {p.stock > 0 ? `${p.stock} u.` : 'Sin Stock'}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-5 text-right">
+                    <div className="flex items-center justify-end gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openModal(p)} className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Editar">
+                          <Edit size={16}/>
+                      </button>
+                      <button onClick={() => handleDelete(p.id)} className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Eliminar">
+                          <Trash2 size={16}/>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-          <div className="flex gap-3 pt-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 text-slate-400 hover:text-white font-medium">Cancelar</button>
-            <button type="submit" className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold shadow-lg shadow-blue-900/20">Guardar</button>
-          </div>
-        </form>
-      </Modal>
+        {/* --- VISTA CARDS (Móvil) --- */}
+        <div className="md:hidden space-y-4">
+          {loading && <div className="p-8 text-center text-zinc-500 animate-pulse">Cargando productos...</div>}
+          
+          {!loading && filteredProducts.length === 0 && (
+            <div className="text-center py-12 text-zinc-500 bg-zinc-900/50 rounded-3xl border border-white/10 border-dashed">
+               <Package className="mx-auto mb-3 opacity-20" size={40}/>
+               <p className="text-sm font-medium">No se encontraron productos</p>
+            </div>
+          )}
 
+          {!loading && filteredProducts.map((p) => (
+            <div key={p.id} className="bg-zinc-900 p-4 rounded-2xl border border-white/5 flex gap-4 shadow-md">
+              
+              {/* Imagen */}
+              <div className="w-20 h-20 bg-white rounded-xl p-2 shrink-0 flex items-center justify-center">
+                 {p.imageUrl ? (
+                   <img src={p.imageUrl} className="w-full h-full object-contain mix-blend-multiply"/>
+                 ) : (
+                   <ImageIcon size={24} className="text-zinc-300"/>
+                 )}
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                 <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-white text-sm truncate pr-2">{p.name}</h3>
+                    <div className="flex gap-1">
+                        <button onClick={() => openModal(p)} className="text-zinc-400 hover:text-white"><Edit size={16}/></button>
+                        <button onClick={() => handleDelete(p.id)} className="text-zinc-400 hover:text-red-400"><Trash2 size={16}/></button>
+                    </div>
+                 </div>
+                 <p className="text-xs text-zinc-500 mb-2">{p.category}</p>
+                 
+                 <div className="flex items-center justify-between mt-auto">
+                    <span className="font-bold text-white">{formatPrice(p.price)}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${p.stock > 0 ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                       {p.stock > 0 ? `Stock: ${p.stock}` : 'Agotado'}
+                    </span>
+                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* --- FORMULARIO MODAL --- */}
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "Editar Producto" : "Nuevo Producto"}>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <FormInput name="name" label="Nombre del Producto" placeholder="Ej. iPhone 15 Pro" value={formData.name} onChange={handleChange} error={errors.name} />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormInput name="price" label="Precio ($)" type="number" value={formData.price} onChange={handleChange} error={errors.price} />
+              <FormInput name="stock" label="Stock Disponible" type="number" value={formData.stock} onChange={handleChange} error={errors.stock} />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Categoría</label>
+              <select name="category" className="bg-black/50 border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none" value={formData.category} onChange={handleChange}>
+                <option>Accesorios</option><option>Audio</option><option>Celulares</option><option>Cargadores</option>
+              </select>
+            </div>
+
+            <div className="p-4 bg-black/30 rounded-2xl border border-white/5 space-y-4">
+               <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <ImageIcon size={12}/> Multimedia & Marketing
+               </h4>
+               <FormInput name="imageUrl" label="URL Imagen Producto" placeholder="https://..." value={formData.imageUrl} onChange={handleChange} error={errors.imageUrl} />
+               <FormInput name="bannerUrl" label="URL Banner (Opcional)" placeholder="https://..." value={formData.bannerUrl} onChange={handleChange} />
+               
+               <div className="flex items-center gap-4 pt-2">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${formData.isFeatured ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-600 bg-transparent'}`}>
+                        {formData.isFeatured && <Zap size={12} className="text-white fill-white"/>}
+                    </div>
+                    <input type="checkbox" name="isFeatured" checked={formData.isFeatured} onChange={handleChange} className="hidden"/>
+                    <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">Destacar Producto</span>
+                  </label>
+
+                  <div className="h-6 w-px bg-white/10 mx-2"></div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-zinc-400">Descuento %</span>
+                    <input name="discount" type="number" className="bg-transparent w-16 text-center text-sm font-bold text-white border-b border-zinc-700 focus:border-indigo-500 outline-none" placeholder="0" value={formData.discount} onChange={handleChange} />
+                  </div>
+               </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 font-medium transition-all">Cancelar</button>
+              <button type="submit" className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
+                 <Save size={18} /> Guardar Cambios
+              </button>
+            </div>
+          </form>
+        </Modal>
+
+      </div>
     </div>
   );
 }
