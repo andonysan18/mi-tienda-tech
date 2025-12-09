@@ -5,8 +5,9 @@ import { validateProductForm } from "@/utils/product.validations";
 import { toast } from "sonner"; 
 import { 
   Plus, X, Trash2, Edit, Image as ImageIcon, Search, 
-  Filter, ShoppingBag, MoreVertical, Package, Zap, ChevronRight, Save
+  Filter, ShoppingBag, MoreVertical, Package, Zap, ChevronRight, Save, LayoutTemplate
 } from "lucide-react";
+import ImageUpload from "@/components/ui/image-upload";
 
 // --- COMPONENTE UI: MODAL (Estilo Tech) ---
 const Modal = ({ isOpen, onClose, title, children }: any) => {
@@ -338,14 +339,37 @@ export default function AdminProductsPage() {
               </select>
             </div>
 
+            {/* ✅ SECCIÓN DE MULTIMEDIA (Doble ImageUpload) */}
             <div className="p-4 bg-black/30 rounded-2xl border border-white/5 space-y-4">
                <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
-                  <ImageIcon size={12}/> Multimedia & Marketing
+                  <ImageIcon size={12}/> Multimedia
                </h4>
-               <FormInput name="imageUrl" label="URL Imagen Producto" placeholder="https://..." value={formData.imageUrl} onChange={handleChange} error={errors.imageUrl} />
-               <FormInput name="bannerUrl" label="URL Banner (Opcional)" placeholder="https://..." value={formData.bannerUrl} onChange={handleChange} />
                
-               <div className="flex items-center gap-4 pt-2">
+               {/* 1. Imagen Principal */}
+               <div>
+                   <label className="text-xs text-zinc-500 font-bold uppercase mb-2 block">Imagen del Producto</label>
+                   <ImageUpload 
+                      value={formData.imageUrl ? [formData.imageUrl] : []}
+                      disabled={loading}
+                      onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+                      onRemove={() => setFormData(prev => ({ ...prev, imageUrl: "" }))}
+                   />
+               </div>
+
+               {/* 2. Banner Promocional (Nuevo) */}
+               <div>
+                   <label className="text-xs text-zinc-500 font-bold uppercase mb-2 block flex items-center gap-2">
+                      <LayoutTemplate size={12}/> Banner (Opcional)
+                   </label>
+                   <ImageUpload 
+                      value={formData.bannerUrl ? [formData.bannerUrl] : []}
+                      disabled={loading}
+                      onChange={(url) => setFormData(prev => ({ ...prev, bannerUrl: url }))}
+                      onRemove={() => setFormData(prev => ({ ...prev, bannerUrl: "" }))}
+                   />
+               </div>
+               
+               <div className="flex items-center gap-4 pt-2 border-t border-white/5 mt-4">
                   <label className="flex items-center gap-3 cursor-pointer group">
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${formData.isFeatured ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-600 bg-transparent'}`}>
                         {formData.isFeatured && <Zap size={12} className="text-white fill-white"/>}
