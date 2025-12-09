@@ -66,7 +66,7 @@ export default function AdminProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/'}api/products`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/products`);
       const data = await res.json();
       setProducts(data);
     } catch (error) { toast.error("Error al cargar"); } 
@@ -96,7 +96,7 @@ export default function AdminProductsPage() {
         label: "Sí, borrar",
         onClick: async () => {
           try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/'}api/products/${id}`, { method: "DELETE" });
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/products/${id}`, { method: "DELETE" });
             if (res.ok) { toast.success("Producto eliminado"); fetchProducts(); }
           } catch (e) { toast.error("Error"); }
         }
@@ -112,8 +112,8 @@ export default function AdminProductsPage() {
 
     const promise = (async () => {
         const url = editingId 
-          ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/'}api/products/${editingId}`
-          : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/'}api/products`;
+          ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/products/${editingId}`
+          : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/products`;
         
         const res = await fetch(url, {
             method: editingId ? "PUT" : "POST",
