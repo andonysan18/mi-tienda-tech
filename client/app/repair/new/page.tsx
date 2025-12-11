@@ -29,7 +29,7 @@ export default function RepairPortalPage() {
     e.preventDefault();
     setLoadingCreate(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/"}api/repairs`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/repairs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, userId: user ? user.id : null }),
@@ -62,7 +62,7 @@ export default function RepairPortalPage() {
     setTicketStatus(null); 
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/"}api/repairs/${trackId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/repairs/${trackId}`);
       if (!res.ok) throw new Error("No encontrado");
       const data = await res.json();
       setTicketStatus(data);
