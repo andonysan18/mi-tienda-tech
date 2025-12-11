@@ -45,7 +45,7 @@ export const login = async (req: Request, res: Response): Promise<any> => {
       // 3. Generar Token (El pase VIP)
       const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
   
-      res.json({ token, user: { id: user.id, name: user.name, role: user.role } });
+      res.json({ token, user: { id: user.id, name: user.name, role: user.role, email: user.email} });
     } catch (error) {
       res.status(500).json({ error: 'Error al iniciar sesión' });
     }

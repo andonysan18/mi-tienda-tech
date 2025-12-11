@@ -9,17 +9,19 @@ import {
   Trash2, 
   ArrowRight, 
   ShoppingBag, 
-  CreditCard, 
   ShieldCheck, 
   Zap, 
   Package, 
   Lock,
-  ChevronLeft
+  ChevronLeft,
+  MessageCircle,
+  Loader2 // <--- Importamos Loader para el botón
 } from "lucide-react";
 
 export default function CartPage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false); // <--- Nuevo estado para controlar el clic
   
   const { cart, removeFromCart, clearCart, getTotalPrice } = useCartStore();
   const user = useAuthStore((state) => state.user);
@@ -36,27 +38,67 @@ export default function CartPage() {
     }).format(price);
   };
 
+  // --- LÓGICA DE WHATSAPP ---
   const handleCheckout = () => {
+    // 1. Verificación de seguridad
     if (!user) {
       toast.error("Acceso requerido", {
-        description: "Inicia sesión para proteger tu compra.",
+        description: "Inicia sesión para realizar tu pedido.",
         action: { label: "Login", onClick: () => router.push("/auth/login") }
       });
       return;
     }
 
-    toast.promise(
-      new Promise((resolve) => setTimeout(resolve, 2000)), 
-      {
-        loading: 'Conectando con pasarela segura...',
-        success: () => {
-          clearCart();
-          router.push("/");
-          return `¡Pago exitoso! Orden generada.`;
-        },
-        error: 'Error en el procesamiento',
-      }
-    );
+    // --- DEBUG: Mira la consola (F12) para ver qué datos tiene el usuario ---
+    console.log("Datos del usuario:", user); 
+    // Si en la consola ves que dice "mail": "...", cambia abajo user.email por user.mail
+    // -----------------------------------------------------------------------
+
+    setIsRedirecting(true); 
+
+    // 2. Definir número (Tu número de Argentina)
+    const phoneNumber = "5491162198405"; 
+
+    // 3. Construir lista de productos
+    const cartItems = cart.map(item => 
+      `📦 *${item.quantity}x* ${item.name} - ${formatPrice(item.price * item.quantity)}`
+    ).join('\n');
+
+    const total = formatPrice(getTotalPrice());
+    
+    // 4. Obtener datos del usuario con FALLBACK (protección)
+    // Usamos ?. para evitar errores si algo falta, y || para poner un texto por defecto
+    const customerName = user?.name || "Cliente";
+    const customerEmail = user?.email || "No especificado"; // <--- AQUÍ ESTABA EL ERROR
+
+    const message = `*¡HOLA TIENDATECH!* 👋\nQuiero confirmar el siguiente pedido:\n\n` +
+      `🧾 *DETALLE DE COMPRA*\n` +
+      `━━━━━━━━━━━━━━━━━━━\n` +
+      `${cartItems}\n` +
+      `━━━━━━━━━━━━━━━━━━━\n\n` +
+      `💰 *TOTAL A PAGAR:* ${total}\n\n` +
+      `👤 *DATOS DE CLIENTE*\n` +
+      `├ 👤 Nombre: ${customerName}\n` +
+      `└ ✉️ Email: ${customerEmail}\n\n` +
+      `📍 _Espero indicaciones para el pago._`;
+
+    // const message = `Hola *TiendaTech*! 🚀\nQuiero finalizar mi compra:\n\n${cartItems}\n\n💰 *Total: ${total}*\n\n👤 *Cliente:* ${customerName}\n✉️ *Email:* ${customerEmail}`;
+
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+    // 5. Abrir WhatsApp
+    window.open(whatsappUrl, '_blank');
+
+    toast.success("¡Abriendo WhatsApp!", {
+        description: "Envía el mensaje para coordinar el pago.",
+        duration: 4000,
+    });
+
+    setTimeout(() => {
+        clearCart();
+        router.push("/");
+        setIsRedirecting(false);
+    }, 1000);
   };
 
   if (!isMounted) return null;
@@ -103,10 +145,10 @@ export default function CartPage() {
            </Link>
            <div className="flex items-end justify-between border-b border-white/10 pb-6">
               <div>
-                 <h1 className="text-3xl font-bold text-white tracking-tight">Tu Carrito</h1>
-                 <p className="text-zinc-500 text-sm mt-1 flex items-center gap-2">
-                    <Package size={14}/> {cart.length} productos agregados
-                 </p>
+                  <h1 className="text-3xl font-bold text-white tracking-tight">Tu Carrito</h1>
+                  <p className="text-zinc-500 text-sm mt-1 flex items-center gap-2">
+                     <Package size={14}/> {cart.length} productos agregados
+                  </p>
               </div>
               <button 
                 onClick={clearCart}
@@ -123,7 +165,7 @@ export default function CartPage() {
           <div className="lg:col-span-8">
             <div className="bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                 
-                {/* Cabecera de Tabla (3 Columnas ahora) */}
+                {/* Cabecera de Tabla */}
                 <div className="hidden md:grid grid-cols-12 gap-4 p-4 border-b border-white/5 bg-white/[0.02] text-xs font-bold text-zinc-500 uppercase tracking-wider">
                     <div className="col-span-6">Producto</div>
                     <div className="col-span-3 text-center">Cantidad</div>
@@ -135,7 +177,7 @@ export default function CartPage() {
                     {cart.map((item) => (
                     <div key={item.id} className="p-4 md:p-6 hover:bg-white/[0.02] transition-colors">
                         
-                        {/* LAYOUT MÓVIL (Flex) - Sin cambios, ya se veía bien */}
+                        {/* LAYOUT MÓVIL */}
                         <div className="flex md:hidden gap-4">
                             <div className="w-20 h-20 bg-white rounded-xl p-2 flex-shrink-0 flex items-center justify-center border border-zinc-800">
                                 <img src={item.imageUrl || "/placeholder.png"} alt={item.name} className="w-full h-full object-contain mix-blend-multiply"/>
@@ -155,10 +197,8 @@ export default function CartPage() {
                             </button>
                         </div>
 
-                        {/* LAYOUT DESKTOP (Grid - 3 Columnas) */}
+                        {/* LAYOUT DESKTOP */}
                         <div className="hidden md:grid grid-cols-12 gap-4 items-center">
-                            
-                            {/* 1. Info + Precio Unitario (Columna 1) */}
                             <div className="col-span-6 flex items-center gap-4">
                                 <div className="w-16 h-16 bg-white rounded-lg p-2 flex-shrink-0 flex items-center justify-center border border-zinc-800">
                                     <img src={item.imageUrl || "/placeholder.png"} alt={item.name} className="w-full h-full object-contain mix-blend-multiply"/>
@@ -166,21 +206,18 @@ export default function CartPage() {
                                 <div>
                                     <h3 className="font-bold text-white text-sm mb-1">{item.name}</h3>
                                     <p className="text-xs text-zinc-500 uppercase mb-1">{item.category}</p>
-                                    {/* Precio unitario aquí, pequeño y sutil */}
                                     <p className="text-xs text-zinc-600 font-mono">
                                         {formatPrice(item.price)} unitario
                                     </p>
                                 </div>
                             </div>
 
-                            {/* 2. Cantidad (Columna 2) */}
                             <div className="col-span-3 text-center">
                                 <span className="px-4 py-1.5 bg-black/50 border border-white/10 rounded-lg text-sm text-white font-mono">
                                     x{item.quantity}
                                 </span>
                             </div>
 
-                            {/* 3. Total y Borrar (Columna 3) */}
                             <div className="col-span-3 text-right flex items-center justify-end gap-4">
                                 <span className="font-bold text-white font-mono text-lg tracking-tight">
                                     {formatPrice(item.price * item.quantity)}
@@ -206,10 +243,10 @@ export default function CartPage() {
             <div className="sticky top-24 space-y-6">
                 
                 <div className="bg-zinc-900 border border-white/10 p-6 md:p-8 rounded-3xl shadow-2xl shadow-black relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full pointer-events-none"></div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 blur-[50px] rounded-full pointer-events-none"></div>
 
                   <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 relative z-10">
-                     Resumen de Orden
+                      Resumen de Orden
                   </h2>
                   
                   <div className="space-y-4 mb-6 relative z-10">
@@ -221,35 +258,53 @@ export default function CartPage() {
                       <span className="flex items-center gap-1">Envío <Zap size={12} className="text-yellow-400 fill-yellow-400"/></span>
                       <span className="text-emerald-400 font-bold text-xs bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">GRATIS</span>
                     </div>
-                    <div className="flex justify-between text-zinc-400 text-sm">
-                      <span>Impuestos</span>
-                      <span className="text-zinc-600 text-xs">Calculados al pagar</span>
-                    </div>
                   </div>
 
                   <div className="h-px bg-white/10 mb-6"></div>
 
                   <div className="flex justify-between items-end mb-8 relative z-10">
                     <span className="text-zinc-400 font-medium pb-1">Total</span>
-                    <span className="text-4xl font-bold text-white tracking-tighter">
-                       {formatPrice(getTotalPrice())}
+                    <span className="text-3xl md:text-4xl font-bold text-white tracking-tighter">
+                        {formatPrice(getTotalPrice())}
                     </span>
                   </div>
 
+                  {/* BOTÓN WHATSAPP MEJORADO CON ESTADO DE CARGA */}
                   <button 
                     onClick={handleCheckout}
-                    className="w-full bg-white hover:bg-zinc-200 text-black py-4 rounded-xl font-bold text-lg shadow-[0_0_20px_-5px_rgba(255,255,255,0.4)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 mb-4 relative z-10"
+                    disabled={isRedirecting}
+                    className="
+                      group w-full relative z-10 
+                      bg-[#25D366] hover:bg-[#1fa851] disabled:bg-[#25D366]/50 disabled:cursor-wait
+                      text-black font-bold 
+                      py-3.5 md:py-4 px-4 
+                      rounded-xl 
+                      text-base md:text-lg 
+                      shadow-[0_0_20px_-5px_rgba(37,211,102,0.4)] 
+                      transition-all active:scale-[0.98] 
+                      flex items-center justify-center gap-2 md:gap-3
+                    "
                   >
-                    Pagar Ahora <ArrowRight size={20} />
+                    {isRedirecting ? (
+                        <>
+                           <Loader2 size={22} className="animate-spin text-black" />
+                           <span>Conectando...</span>
+                        </>
+                    ) : (
+                        <>
+                           <span>Acordar por WhatsApp</span>
+                           <MessageCircle size={22} className="shrink-0 fill-black/10 transition-transform group-hover:rotate-12" />
+                        </>
+                    )}
                   </button>
                   
-                  <div className="flex items-center justify-center gap-2 text-[10px] text-zinc-500 font-medium uppercase tracking-widest">
-                    <Lock size={10} /> Transacción Encriptada SSL
+                  <div className="flex items-center justify-center gap-2 text-[10px] text-zinc-500 font-medium uppercase tracking-widest text-center mt-4">
+                    <Lock size={10} /> Coordinación directa con vendedor
                   </div>
                 </div>
 
                 <div className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                   <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20 shrink-0">
                       <ShieldCheck size={20} />
                    </div>
                    <div>
