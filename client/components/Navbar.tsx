@@ -7,12 +7,11 @@ import { useAuthStore } from "@/store/auth.store";
 import { 
   ShoppingBag, 
   LogOut, 
-  User, 
   LayoutDashboard, 
   Menu, 
   X,
   Zap 
-} from "lucide-react"; // Asegúrate de tener instalada lucide-react
+} from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
@@ -22,7 +21,7 @@ export default function Navbar() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
-  const totalItems = useCartStore((state) => state.getTotalPrice()); // Asegúrate que tu store tenga este método o usa length
+  const totalItems = useCartStore((state) => state.getTotalPrice()); 
   const clearCart = useCartStore((state) => state.clearCart);
 
   useEffect(() => {
@@ -30,6 +29,7 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = () => {
+    setIsMobileMenuOpen(false); // CORRECCIÓN 1: Cierra el menú explícitamente
     clearCart();
     logout();
     router.push("/auth/login");
@@ -85,27 +85,22 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* SEPARADOR VERTICAL */}
+            {/* SEPARADOR VERTICAL (Desktop) */}
             <div className="h-6 w-px bg-white/10 hidden md:block"></div>
 
-            {/* ÁREA DE USUARIO */}
+            {/* --- ÁREA DE USUARIO (DESKTOP) --- */}
             {user ? (
               <div className="hidden md:flex items-center gap-3 pl-2">
-                
-                {/* Info Usuario */}
                 <div className="text-right hidden lg:block">
                   <p className="text-xs text-zinc-500 font-medium">Conectado como</p>
                   <p className="text-sm font-bold text-white leading-none">{user.name.split(' ')[0]}</p>
                 </div>
 
-                {/* Dropdown / Botones de Acción */}
                 <div className="flex items-center gap-1 bg-zinc-900 border border-white/10 rounded-full p-1 pl-1 pr-1">
-                   {/* Avatar */}
                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white border border-black/50">
-                      {user.name.charAt(0)}
+                      {user.name.charAt(0).toUpperCase()}
                    </div>
                    
-                   {/* Botón Admin */}
                    {user.role === 'ADMIN' && (
                      <Link
                        href="/admin"
@@ -116,7 +111,6 @@ export default function Navbar() {
                      </Link>
                    )}
 
-                   {/* Botón Salir */}
                    <button
                      onClick={handleLogout}
                      title="Cerrar Sesión"
@@ -127,7 +121,7 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              // NO LOGUEADO (Botones High Contrast)
+              // NO LOGUEADO DESKTOP
               <div className="hidden md:flex items-center gap-3">
                 <Link
                   href="/auth/login"
@@ -144,9 +138,16 @@ export default function Navbar() {
               </div>
             )}
 
+            {/* --- NUEVO: INDICADOR DE USUARIO (SOLO MÓVIL) --- */}
+            {user && (
+                <div className="md:hidden flex items-center justify-center h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border border-white/10 shadow-lg animate-in zoom-in duration-300">
+                    <span className="text-xs font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
+                </div>
+            )}
+
             {/* HAMBURGER MENU (Móvil) */}
             <button 
-              className="md:hidden p-2 text-zinc-400 hover:text-white"
+              className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -164,26 +165,40 @@ export default function Navbar() {
               
               {user ? (
                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                       <div className="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xs">{user.name.charAt(0)}</div>
+                    <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                       <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                         {user.name.charAt(0).toUpperCase()}
+                       </div>
                        <div>
                           <p className="text-white font-bold text-sm">{user.name}</p>
-                          <p className="text-zinc-500 text-xs">{user.email || "Usuario"}</p>
+                          <p className="text-zinc-500 text-xs truncate max-w-[150px]">{user.email || "Usuario"}</p>
                        </div>
                     </div>
                     {user.role === 'ADMIN' && (
-                       <Link href="/admin" className="flex items-center gap-2 text-sm text-yellow-400 py-2">
-                          <LayoutDashboard size={16}/> Panel Admin
+                       <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-sm text-yellow-400 py-2 hover:bg-white/5 px-2 rounded-lg transition-colors">
+                          <LayoutDashboard size={18}/> Panel Admin
                        </Link>
                     )}
-                    <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-400 py-2 text-left">
-                       <LogOut size={16}/> Cerrar Sesión
+                    <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-red-400 py-2 hover:bg-white/5 px-2 rounded-lg transition-colors w-full text-left">
+                       <LogOut size={18}/> Cerrar Sesión
                     </button>
                  </div>
               ) : (
                  <div className="flex flex-col gap-3">
-                    <Link href="/auth/login" className="text-center text-white border border-white/10 py-2.5 rounded-xl">Ingresar</Link>
-                    <Link href="/auth/register" className="text-center bg-white text-black py-2.5 rounded-xl font-bold">Registrarse</Link>
+                    <Link 
+                      href="/auth/login" 
+                      onClick={() => setIsMobileMenuOpen(false)} // CORRECCIÓN 2
+                      className="text-center text-white border border-white/10 py-3 rounded-xl hover:bg-white/5 transition-colors"
+                    >
+                      Ingresar
+                    </Link>
+                    <Link 
+                      href="/auth/register" 
+                      onClick={() => setIsMobileMenuOpen(false)} // CORRECCIÓN 3
+                      className="text-center bg-white text-black py-3 rounded-xl font-bold hover:bg-zinc-200 transition-colors"
+                    >
+                      Registrarse
+                    </Link>
                  </div>
               )}
            </div>

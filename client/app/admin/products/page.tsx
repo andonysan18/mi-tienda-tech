@@ -5,33 +5,50 @@ import { validateProductForm } from "@/utils/product.validations";
 import { toast } from "sonner"; 
 import { 
   Plus, X, Trash2, Edit, Image as ImageIcon, Search, 
-  Filter, ShoppingBag, MoreVertical, Package, Zap, ChevronRight, Save, LayoutTemplate
+  Filter, Package, Zap, ChevronRight, Save, LayoutTemplate
 } from "lucide-react";
 import ImageUpload from "@/components/ui/image-upload";
 
-// --- COMPONENTE UI: MODAL (Estilo Tech) ---
+// MODAL 100% CORREGIDO – NUNCA MÁS QUEDARÁ DETRÁS DEL SIDEBAR
+// --- MODAL CORREGIDO (NIVEL SUPREMO) ---
 const Modal = ({ isOpen, onClose, title, children }: any) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    // 🔥 CAMBIO CRÍTICO: z-[9999] para que NADA lo tape
+    <div className="fixed inset-0 z-[9999] flex justify-center items-end sm:items-center sm:p-4">
+      
+      {/* Fondo oscuro */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-      <div className="relative bg-zinc-900 border border-white/10 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center p-6 border-b border-white/10 sticky top-0 bg-zinc-900 z-10">
-          <h3 className="text-xl font-bold text-white tracking-tight">{title}</h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={20}/></button>
+      
+      {/* Contenedor del Modal */}
+      <div className="relative bg-zinc-900 border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:w-[90%] md:max-w-3xl h-[90vh] sm:h-auto sm:max-h-[85vh] flex flex-col animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
+        
+        {/* Header Sticky */}
+        <div className="flex justify-between items-center p-6 border-b border-white/10 bg-zinc-900 rounded-t-3xl shrink-0 z-20">
+          <div>
+            <h3 className="text-xl font-bold text-white tracking-tight">{title}</h3>
+            <p className="text-xs text-zinc-400 mt-1 hidden sm:block">Completa los detalles a continuación</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
+            <X size={24}/>
+          </button>
         </div>
-        <div className="p-6">{children}</div>
+
+        {/* Cuerpo con Scroll */}
+        <div className="p-6 overflow-y-auto custom-scrollbar">
+            {children}
+        </div>
       </div>
     </div>
   );
 };
 
-// --- COMPONENTE UI: INPUT (Estilo Tech) ---
+// --- COMPONENTE UI: INPUT ---
 const FormInput = ({ label, error, ...props }: any) => (
-  <div className="flex flex-col gap-2">
+  <div className="flex flex-col gap-2 w-full">
     <label className="text-xs text-zinc-400 font-bold uppercase tracking-wider">{label}</label>
     <input 
-      className={`bg-black/50 border rounded-xl p-3 text-white text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all placeholder:text-zinc-600 ${error ? 'border-red-500/50' : 'border-white/10 focus:border-indigo-500'}`} 
+      className={`w-full bg-black/50 border rounded-xl p-3.5 text-white text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all placeholder:text-zinc-600 ${error ? 'border-red-500/50' : 'border-white/10 focus:border-indigo-500'}`} 
       {...props} 
     />
     {error && <span className="text-xs text-red-400 flex items-center gap-1">⚠️ {error}</span>}
@@ -146,6 +163,8 @@ export default function AdminProductsPage() {
     return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0 }).format(Number(price));
   };
 
+
+
   return (
     <div className="min-h-screen bg-black text-zinc-200 font-sans selection:bg-indigo-500/30">
       
@@ -157,20 +176,20 @@ export default function AdminProductsPage() {
       <div className="max-w-7xl mx-auto pb-24 px-4 sm:px-6 lg:px-8 pt-8 relative z-10">
         
         {/* --- HEADER --- */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4 border-b border-white/10 pb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4 border-b border-white/10 pb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-3">
                Inventario
                <span className="text-xs bg-zinc-800 text-zinc-400 px-2 py-1 rounded-md border border-white/5 font-mono">v2.0</span>
             </h1>
-            <p className="text-zinc-400 mt-2 flex items-center gap-2">
+            <p className="text-zinc-400 mt-2 flex items-center gap-2 text-sm md:text-base">
                <Package size={16} /> Gestionando <strong className="text-white">{products.length}</strong> productos
             </p>
           </div>
           
           <button 
             onClick={() => openModal()} 
-            className="w-full sm:w-auto bg-white text-black hover:bg-zinc-200 px-6 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] active:scale-95 group"
+            className="w-full md:w-auto bg-white text-black hover:bg-zinc-200 px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] active:scale-95 group"
           >
             <Plus size={20} /> 
             <span>Agregar Producto</span>
@@ -193,8 +212,8 @@ export default function AdminProductsPage() {
             )}
           </div>
 
-          <div className="relative md:w-64 border-l border-white/5 pl-2 md:pl-0 border-t md:border-t-0 pt-2 md:pt-0">
-            <Filter className="absolute left-3 md:left-3 top-5 md:top-3 text-zinc-500 pointer-events-none" size={16}/>
+          <div className="relative md:w-64 border-l-0 md:border-l border-white/5 pl-0 md:pl-2 pt-2 md:pt-0 border-t md:border-t-0">
+            <Filter className="absolute left-3 md:left-5 top-5 md:top-3 text-zinc-500 pointer-events-none" size={16}/>
             <select 
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
@@ -228,12 +247,11 @@ export default function AdminProductsPage() {
                 <tr key={p.id} className="group hover:bg-white/[0.02] transition-colors">
                   <td className="p-5">
                     <div className="flex items-center gap-4">
-                      {/* Imagen con fondo blanco para resaltar */}
-                      <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shadow-sm shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center shadow-sm shrink-0 overflow-hidden">
                         {p.imageUrl ? (
-                            <img src={p.imageUrl} className="w-full h-full object-contain mix-blend-multiply"/> 
+                           <img src={p.imageUrl} className="w-full h-full object-contain"/> 
                         ) : (
-                            <ImageIcon size={20} className="text-zinc-300"/>
+                           <ImageIcon size={20} className="text-zinc-300"/>
                         )}
                       </div>
                       <div>
@@ -289,34 +307,40 @@ export default function AdminProductsPage() {
           )}
 
           {!loading && filteredProducts.map((p) => (
-            <div key={p.id} className="bg-zinc-900 p-4 rounded-2xl border border-white/5 flex gap-4 shadow-md">
+            <div key={p.id} className="bg-zinc-900 p-4 rounded-2xl border border-white/5 flex gap-4 shadow-md items-center">
               
               {/* Imagen */}
-              <div className="w-20 h-20 bg-white rounded-xl p-2 shrink-0 flex items-center justify-center">
+              <div className="w-20 h-20 bg-white rounded-xl p-2 shrink-0 flex items-center justify-center overflow-hidden">
                  {p.imageUrl ? (
-                   <img src={p.imageUrl} className="w-full h-full object-contain mix-blend-multiply"/>
+                   <img src={p.imageUrl} className="w-full h-full object-contain"/>
                  ) : (
                    <ImageIcon size={24} className="text-zinc-300"/>
                  )}
               </div>
 
               {/* Info */}
-              <div className="flex-1 min-w-0 flex flex-col justify-center">
-                 <div className="flex justify-between items-start">
+              <div className="flex-1 min-w-0">
+                 <div className="flex justify-between items-start mb-1">
                     <h3 className="font-bold text-white text-sm truncate pr-2">{p.name}</h3>
-                    <div className="flex gap-1">
-                        <button onClick={() => openModal(p)} className="text-zinc-400 hover:text-white"><Edit size={16}/></button>
-                        <button onClick={() => handleDelete(p.id)} className="text-zinc-400 hover:text-red-400"><Trash2 size={16}/></button>
-                    </div>
                  </div>
                  <p className="text-xs text-zinc-500 mb-2">{p.category}</p>
                  
-                 <div className="flex items-center justify-between mt-auto">
+                 <div className="flex items-center justify-between">
                     <span className="font-bold text-white">{formatPrice(p.price)}</span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${p.stock > 0 ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                        {p.stock > 0 ? `Stock: ${p.stock}` : 'Agotado'}
                     </span>
                  </div>
+              </div>
+
+              {/* Botones de acción móviles (Más grandes para el dedo) */}
+              <div className="flex flex-col gap-2 ml-2">
+                 <button onClick={() => openModal(p)} className="p-2.5 bg-zinc-800 text-zinc-400 hover:text-white rounded-lg border border-white/5">
+                    <Edit size={18}/>
+                 </button>
+                 <button onClick={() => handleDelete(p.id)} className="p-2.5 bg-zinc-800 text-red-400 hover:bg-red-500/10 rounded-lg border border-white/5">
+                    <Trash2 size={18}/>
+                 </button>
               </div>
             </div>
           ))}
@@ -329,48 +353,52 @@ export default function AdminProductsPage() {
             
             <div className="grid grid-cols-2 gap-4">
               <FormInput name="price" label="Precio ($)" type="number" value={formData.price} onChange={handleChange} error={errors.price} />
-              <FormInput name="stock" label="Stock Disponible" type="number" value={formData.stock} onChange={handleChange} error={errors.stock} />
+              <FormInput name="stock" label="Stock" type="number" value={formData.stock} onChange={handleChange} error={errors.stock} />
             </div>
 
             <div className="flex flex-col gap-2">
               <label className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Categoría</label>
-              <select name="category" className="bg-black/50 border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none" value={formData.category} onChange={handleChange}>
+              <select name="category" className="bg-black/50 border border-white/10 rounded-xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none w-full" value={formData.category} onChange={handleChange}>
                 <option>Accesorios</option><option>Audio</option><option>Celulares</option><option>Cargadores</option>
               </select>
             </div>
 
-            {/* ✅ SECCIÓN DE MULTIMEDIA (Doble ImageUpload) */}
-            <div className="p-4 bg-black/30 rounded-2xl border border-white/5 space-y-4">
-               <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
-                  <ImageIcon size={12}/> Multimedia
+            {/* ✅ SECCIÓN DE MULTIMEDIA MEJORADA (GRID) */}
+            <div className="p-5 bg-black/30 rounded-2xl border border-white/5">
+               <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2 mb-4">
+                  <ImageIcon size={14}/> Multimedia
                </h4>
                
-               {/* 1. Imagen Principal */}
-               <div>
-                   <label className="text-xs text-zinc-500 font-bold uppercase mb-2 block">Imagen del Producto</label>
-                   <ImageUpload 
-                      value={formData.imageUrl ? [formData.imageUrl] : []}
-                      disabled={loading}
-                      onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
-                      onRemove={() => setFormData(prev => ({ ...prev, imageUrl: "" }))}
-                   />
-               </div>
+               {/* Grid responsiva: 1 col en móvil, 2 en PC */}
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                   {/* 1. Imagen Principal */}
+                   <div className="space-y-2">
+                       <label className="text-xs text-zinc-500 font-bold uppercase block">Portada</label>
+                       <ImageUpload 
+                         value={formData.imageUrl ? [formData.imageUrl] : []}
+                         disabled={loading}
+                         onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+                         onRemove={() => setFormData(prev => ({ ...prev, imageUrl: "" }))}
+                       />
+                   </div>
 
-               {/* 2. Banner Promocional (Nuevo) */}
-               <div>
-                   <label className="text-xs text-zinc-500 font-bold uppercase mb-2 block flex items-center gap-2">
-                      <LayoutTemplate size={12}/> Banner (Opcional)
-                   </label>
-                   <ImageUpload 
-                      value={formData.bannerUrl ? [formData.bannerUrl] : []}
-                      disabled={loading}
-                      onChange={(url) => setFormData(prev => ({ ...prev, bannerUrl: url }))}
-                      onRemove={() => setFormData(prev => ({ ...prev, bannerUrl: "" }))}
-                   />
+                   {/* 2. Banner Promocional */}
+                   <div className="space-y-2">
+                       <label className="text-xs text-zinc-500 font-bold uppercase block flex items-center gap-2">
+                          <LayoutTemplate size={12}/> Banner (Opcional)
+                       </label>
+                       <ImageUpload 
+                         value={formData.bannerUrl ? [formData.bannerUrl] : []}
+                         disabled={loading}
+                         onChange={(url) => setFormData(prev => ({ ...prev, bannerUrl: url }))}
+                         onRemove={() => setFormData(prev => ({ ...prev, bannerUrl: "" }))}
+                       />
+                   </div>
                </div>
                
-               <div className="flex items-center gap-4 pt-2 border-t border-white/5 mt-4">
-                  <label className="flex items-center gap-3 cursor-pointer group">
+               {/* Switches y Extras */}
+               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-4 border-t border-white/5 mt-4">
+                  <label className="flex items-center gap-3 cursor-pointer group bg-zinc-800/30 p-2 rounded-lg border border-white/5 w-full sm:w-auto">
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${formData.isFeatured ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-600 bg-transparent'}`}>
                         {formData.isFeatured && <Zap size={12} className="text-white fill-white"/>}
                     </div>
@@ -378,19 +406,19 @@ export default function AdminProductsPage() {
                     <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">Destacar Producto</span>
                   </label>
 
-                  <div className="h-6 w-px bg-white/10 mx-2"></div>
+                  <div className="hidden sm:block h-6 w-px bg-white/10 mx-2"></div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3 w-full sm:w-auto bg-zinc-800/30 p-2 rounded-lg border border-white/5">
                     <span className="text-xs text-zinc-400">Descuento %</span>
-                    <input name="discount" type="number" className="bg-transparent w-16 text-center text-sm font-bold text-white border-b border-zinc-700 focus:border-indigo-500 outline-none" placeholder="0" value={formData.discount} onChange={handleChange} />
+                    <input name="discount" type="number" className="bg-transparent w-full sm:w-16 text-right text-sm font-bold text-white focus:text-indigo-400 outline-none" placeholder="0" value={formData.discount} onChange={handleChange} />
                   </div>
                </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 font-medium transition-all">Cancelar</button>
-              <button type="submit" className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
-                 <Save size={18} /> Guardar Cambios
+            <div className="flex gap-3 pt-2 pb-6 sm:pb-0">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 font-medium transition-all">Cancelar</button>
+              <button type="submit" className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
+                 <Save size={18} /> Guardar
               </button>
             </div>
           </form>
